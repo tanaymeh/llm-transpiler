@@ -21,8 +21,8 @@ def python_compile(code: str, error: dict):
             f"{e.text}\n"
             f"{' ' * (e.offset - 1)}^"
         )
-
         return error
+
     except Exception as e:
         error["status"] = 1
         error["message"] = f"Compilation Error: {str(e)}"
