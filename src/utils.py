@@ -3,6 +3,10 @@ import re
 import ast
 import subprocess
 
+from typing import Any, List
+
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+
 
 def python_compile(code: str, error: dict):
     """Compiles Python code and catches any compile-time errors"""
@@ -63,3 +67,17 @@ def sanitize_output(code: str):
             code_lines.append(line)
 
     return "\n".join(code_lines)
+
+
+def generate_questions(model: Any, state: Any, template: str) -> List:
+    """Generates questions about a code file given a model, state and template"""
+    messages = [
+        SystemMessage(content=template.format(state["scratchpad"])),
+        HumanMessage(content=state["original_code"]),
+    ]
+
+    # Generate questions
+    questions = model(messages)
+    questions = questions.content.split(".")
+
+    return questions

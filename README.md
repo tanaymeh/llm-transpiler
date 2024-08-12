@@ -19,5 +19,5 @@ A more complex version of transpiler can be found at [`src/complex_transpile.py`
 The original code first flows into the summary node which uses an LLM to generate a concise, technical summary of the original code file including details about what each class and function does. This summary then, along with the original code is sent to the transpile node and then process continues as normal.
 
 The final node is a format node which uses Black formatter in Python to format the code at the end of successful compilation to meet the PEP8 standards.
-
+ 
 This version is currently under work.

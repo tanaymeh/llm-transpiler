@@ -10,13 +10,20 @@ from typing import TypedDict
 from dotenv import load_dotenv, find_dotenv
 
 from conditions import compile_time_error
-from nodes import transpile_node, compile_node, summary_node, format_node
+from nodes import (
+    transpile_node,
+    compile_node,
+    summary_node,
+    format_node,
+    step_generation_node,
+    search_node,
+)
 
 
 class State(TypedDict):
     code: str
     original_code: str
-    code_summary: str
+    scratchpad: str
     error: dict
     iterations: int
 
@@ -24,6 +31,8 @@ class State(TypedDict):
 def init_graph(
     summary_node_fn,
     transpile_node_fn,
+    step_generation_node_fn,
+    search_node_fn,
     compile_node_fn,
     format_node_fn,
     compile_time_error_fn,
@@ -34,6 +43,8 @@ def init_graph(
     # Add all the nodes
     graph.add_node("summary", summary_node_fn)
     graph.add_node("transpile", transpile_node_fn)
+    graph.add_node("step_generation", step_generation_node_fn)
+    graph.add_node("search_node", search_node_fn)
     graph.add_node("compile", compile_node_fn)
     graph.add_node("format", format_node_fn)
 
@@ -41,7 +52,9 @@ def init_graph(
     graph.set_entry_point("summary")
 
     # Add edges
-    graph.add_edge("summary", "transpile")
+    graph.add_edge("summary", "step_generation")
+    graph.add_edge("step_generation", "search_node")
+    graph.add_edge("search_node", "transpile")
     graph.add_edge("transpile", "compile")
     graph.add_edge("format", END)
 
@@ -85,7 +98,7 @@ if __name__ == "__main__":
     state = State(
         code="",
         original_code=java_code,
-        code_summary="",
+        scratchpad="",
         error={
             "status": 0,
             "message": "",
@@ -93,18 +106,27 @@ if __name__ == "__main__":
         iterations=0,
     )
 
-    # Define the partials for initialising the graph
+    # LLM-nodes
     summary_node_fn = partial(summary_node, model=model, templates=prompts)
     transpile_node_fn = partial(transpile_node, model=model, templates=prompts)
+    step_generation_node_fn = partial(
+        step_generation_node, model=model, templates=prompts
+    )
+    search_node_fn = partial(search_node, model=model, templates=prompts)
+
+    # Non-LLM nodes
     compile_node_fn = partial(compile_node, debug=is_debug)
     format_node_fn = partial(format_node, save_file_path=python_file_path)
 
+    # Decision nodes
     compile_time_error_fn = partial(compile_time_error, max_iter=max_iter)
 
     # Init the graph and compile it
     graph = init_graph(
         summary_node_fn,
         transpile_node_fn,
+        step_generation_node_fn,
+        search_node_fn,
         compile_node_fn,
         format_node_fn,
         compile_time_error_fn,

@@ -1,4 +1,3 @@
-import os
 import json
 from datetime import datetime, timedelta
 
@@ -24,7 +23,7 @@ class Book:
 
 
 class Library:
-    LIBRARY_FILE = "library.json"
+    LIBRARY_FILE = "library.txt"
 
     def __init__(self):
         self.books = []
@@ -37,10 +36,7 @@ class Library:
         self.books = [book for book in self.books if book.isbn != isbn]
 
     def find_book(self, isbn):
-        for book in self.books:
-            if book.isbn == isbn:
-                return book
-        return None
+        return next((book for book in self.books if book.isbn == isbn), None)
 
     def check_out_book(self, isbn):
         book = self.find_book(isbn)
@@ -60,49 +56,38 @@ class Library:
 
     def display_overdue_books(self):
         today = datetime.now()
-        overdue_books = [
-            book for book in self.books if book.is_checked_out and book.due_date < today
-        ]
-        for book in overdue_books:
-            days_overdue = (today - book.due_date).days
-            print(f"{book} - Days Overdue: {days_overdue}")
+        for book in self.books:
+            if book.is_checked_out and book.due_date < today:
+                days_overdue = (today - book.due_date).days
+                print(f"{book} - Days Overdue: {days_overdue}")
 
     def save_library(self):
-        try:
-            with open(self.LIBRARY_FILE, "w") as file:
-                json.dump(
-                    [
-                        {
-                            "title": book.title,
-                            "author": book.author,
-                            "isbn": book.isbn,
-                            "is_checked_out": book.is_checked_out,
-                            "due_date": (
-                                book.due_date.isoformat() if book.due_date else None
-                            ),
-                        }
-                        for book in self.books
-                    ],
-                    file,
+        with open(self.LIBRARY_FILE, "w") as f:
+            for book in self.books:
+                f.write(
+                    f"{book.title},{book.author},{book.isbn},{book.is_checked_out},{book.due_date}\n"
                 )
             print("Library saved successfully.")
-        except IOError as e:
-            print(f"Error saving library: {e}")
 
     def load_library(self):
-        if os.path.exists(self.LIBRARY_FILE):
-            try:
-                with open(self.LIBRARY_FILE, "r") as file:
-                    books_data = json.load(file)
-                    for data in books_data:
-                        book = Book(data["title"], data["author"], data["isbn"])
-                        if data["is_checked_out"]:
-                            book.check_out()
-                            book.due_date = datetime.fromisoformat(data["due_date"])
-                        self.books.append(book)
+        try:
+            with open(self.LIBRARY_FILE, "r") as f:
+                for line in f:
+                    parts = line.strip().split(",")
+                    book = Book(parts[0], parts[1], parts[2])
+                    if parts[3] == "True":
+                        book.check_out()
+                        book.due_date = (
+                            datetime.fromisoformat(parts[4])
+                            if parts[4] != "None"
+                            else None
+                        )
+                    self.books.append(book)
                 print("Library loaded successfully.")
-            except IOError as e:
-                print(f"Error loading library: {e}")
+        except FileNotFoundError:
+            print("Library file not found. Starting with an empty library.")
+        except Exception as e:
+            print(f"Error loading library: {e}")
 
 
 class LibraryManagementSystem:
@@ -144,6 +129,16 @@ class LibraryManagementSystem:
         print("7. Save library")
         print("8. Exit")
 
+    def get_string_input(self, prompt):
+        return input(prompt)
+
+    def get_int_input(self, prompt):
+        while True:
+            try:
+                return int(input(prompt))
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+
     def add_book(self):
         title = self.get_string_input("Enter book title: ")
         author = self.get_string_input("Enter book author: ")
@@ -160,7 +155,7 @@ class LibraryManagementSystem:
         isbn = self.get_string_input("Enter ISBN of book to find: ")
         book = self.library.find_book(isbn)
         if book:
-            print("Book found: " + str(book))
+            print("Book found:", book)
         else:
             print("Book not found.")
 
@@ -175,16 +170,7 @@ class LibraryManagementSystem:
     def display_overdue_books(self):
         self.library.display_overdue_books()
 
-    def get_string_input(self, prompt):
-        return input(prompt)
-
-    def get_int_input(self, prompt):
-        while True:
-            try:
-                return int(input(prompt))
-            except ValueError:
-                print("Invalid input. Please enter a number.")
-
 
 if __name__ == "__main__":
-    LibraryManagementSystem().main()
+    system = LibraryManagementSystem()
+    system.main()
