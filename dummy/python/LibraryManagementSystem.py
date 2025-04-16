@@ -1,25 +1,30 @@
-import json
-from datetime import datetime, timedelta
+import datetime
+from datetime import timedelta
+import sys
 
 
 class Book:
-    def __init__(self, title, author, isbn):
+    def __init__(self, title, author, isbn, checked_out=False, due_date=None):
         self.title = title
         self.author = author
         self.isbn = isbn
-        self.is_checked_out = False
-        self.due_date = None
+        self.checked_out = checked_out
+        self.due_date = due_date  # datetime.date or None
 
     def check_out(self):
-        self.is_checked_out = True
-        self.due_date = datetime.now() + timedelta(days=14)  # Due in 14 days
+        self.checked_out = True
+        self.due_date = datetime.date.today() + timedelta(days=14)
 
     def return_book(self):
-        self.is_checked_out = False
+        self.checked_out = False
         self.due_date = None
 
     def __str__(self):
-        return f"Title: {self.title}, Author: {self.author}, ISBN: {self.isbn}, Checked Out: {self.is_checked_out}, Due Date: {self.due_date}"
+        due = self.due_date.isoformat() if self.due_date else "N/A"
+        return (
+            f"Title: {self.title}, Author: {self.author}, ISBN: {self.isbn}, "
+            f"Checked Out: {self.checked_out}, Due Date: {due}"
+        )
 
 
 class Library:
@@ -27,20 +32,23 @@ class Library:
 
     def __init__(self):
         self.books = []
-        self.load_library()
+        self.load()
 
     def add_book(self, book):
         self.books.append(book)
 
     def remove_book(self, isbn):
-        self.books = [book for book in self.books if book.isbn != isbn]
+        self.books = [b for b in self.books if b.isbn != isbn]
 
     def find_book(self, isbn):
-        return next((book for book in self.books if book.isbn == isbn), None)
+        for book in self.books:
+            if book.isbn == isbn:
+                return book
+        return None
 
     def check_out_book(self, isbn):
         book = self.find_book(isbn)
-        if book and not book.is_checked_out:
+        if book and not book.checked_out:
             book.check_out()
             print("Book checked out successfully.")
         else:
@@ -48,56 +56,60 @@ class Library:
 
     def return_book(self, isbn):
         book = self.find_book(isbn)
-        if book and book.is_checked_out:
+        if book and book.checked_out:
             book.return_book()
             print("Book returned successfully.")
         else:
             print("Invalid return operation.")
 
     def display_overdue_books(self):
-        today = datetime.now()
+        today = datetime.date.today()
         for book in self.books:
-            if book.is_checked_out and book.due_date < today:
+            if book.checked_out and book.due_date < today:
                 days_overdue = (today - book.due_date).days
                 print(f"{book} - Days Overdue: {days_overdue}")
 
-    def save_library(self):
-        with open(self.LIBRARY_FILE, "w") as f:
-            for book in self.books:
-                f.write(
-                    f"{book.title},{book.author},{book.isbn},{book.is_checked_out},{book.due_date}\n"
-                )
-            print("Library saved successfully.")
-
-    def load_library(self):
+    def save(self):
         try:
-            with open(self.LIBRARY_FILE, "r") as f:
-                for line in f:
-                    parts = line.strip().split(",")
-                    book = Book(parts[0], parts[1], parts[2])
-                    if parts[3] == "True":
-                        book.check_out()
-                        book.due_date = (
-                            datetime.fromisoformat(parts[4])
-                            if parts[4] != "None"
-                            else None
-                        )
-                    self.books.append(book)
-                print("Library loaded successfully.")
-        except FileNotFoundError:
-            print("Library file not found. Starting with an empty library.")
+            with open(self.LIBRARY_FILE, 'w') as f:
+                for book in self.books:
+                    due_str = book.due_date.isoformat() if book.due_date else ""
+                    f.write(
+                        f"{book.title},{book.author},{book.isbn},"
+                        f"{book.checked_out},{due_str}\n"
+                    )
+            print("Library saved successfully.")
         except Exception as e:
-            print(f"Error loading library: {e}")
+            print(f"Error saving: {e}")
+
+    def load(self):
+        try:
+            with open(self.LIBRARY_FILE, 'r') as f:
+                for line in f:
+                    parts = line.strip().split(',')
+                    if len(parts) != 5:
+                        continue  # Skip invalid lines
+                    title, author, isbn, checked_out_str, due_str = parts
+                    checked_out = checked_out_str.lower() == 'true'
+                    due_date = datetime.date.fromisoformat(due_str) if due_str else None
+                    book = Book(title, author, isbn, checked_out, due_date)
+                    self.books.append(book)
+            print("Library loaded successfully.")
+        except FileNotFoundError:
+            print("No saved library found. Starting with empty list.")
+        except Exception as e:
+            print(f"Error loading: {e}")
 
 
 class LibraryManagementSystem:
     def __init__(self):
         self.library = Library()
+        self.scanner = sys.stdin
 
-    def main(self):
+    def run(self):
         while True:
             self.display_menu()
-            choice = self.get_int_input("Enter your choice: ")
+            choice = self.get_int("Enter choice: ")
             if choice == 1:
                 self.add_book()
             elif choice == 2:
@@ -109,68 +121,56 @@ class LibraryManagementSystem:
             elif choice == 5:
                 self.return_book()
             elif choice == 6:
-                self.display_overdue_books()
+                self.library.display_overdue_books()
             elif choice == 7:
-                self.library.save_library()
+                self.library.save()
             elif choice == 8:
                 print("Exiting...")
                 break
             else:
-                print("Invalid choice. Please try again.")
+                print("Invalid choice.")
 
     def display_menu(self):
         print("\n--- Library Management System ---")
-        print("1. Add a book")
-        print("2. Remove a book")
-        print("3. Find a book")
-        print("4. Check out a book")
-        print("5. Return a book")
-        print("6. Display overdue books")
-        print("7. Save library")
-        print("8. Exit")
+        print("1. Add a book\n2. Remove a book\n3. Find a book\n4. Check out a book")
+        print("5. Return a book\n6. Display overdue books\n7. Save library\n8. Exit")
 
-    def get_string_input(self, prompt):
-        return input(prompt)
+    def add_book(self):
+        title = self.get_string("Enter title: ")
+        author = self.get_string("Enter author: ")
+        isbn = self.get_string("Enter ISBN: ")
+        self.library.add_book(Book(title, author, isbn))
+        print("Book added.")
 
-    def get_int_input(self, prompt):
+    def remove_book(self):
+        isbn = self.get_string("Enter ISBN: ")
+        self.library.remove_book(isbn)
+        print("Book removed.")
+
+    def find_book(self):
+        isbn = self.get_string("Enter ISBN: ")
+        book = self.library.find_book(isbn)
+        print(f"Found: {book}" if book else "Not found.")
+
+    def check_out_book(self):
+        isbn = self.get_string("Enter ISBN: ")
+        self.library.check_out_book(isbn)
+
+    def return_book(self):
+        isbn = self.get_string("Enter ISBN: ")
+        self.library.return_book(isbn)
+
+    def get_string(self, prompt):
+        print(prompt, end='')
+        return input().strip()
+
+    def get_int(self, prompt):
         while True:
             try:
                 return int(input(prompt))
             except ValueError:
-                print("Invalid input. Please enter a number.")
-
-    def add_book(self):
-        title = self.get_string_input("Enter book title: ")
-        author = self.get_string_input("Enter book author: ")
-        isbn = self.get_string_input("Enter book ISBN: ")
-        self.library.add_book(Book(title, author, isbn))
-        print("Book added successfully.")
-
-    def remove_book(self):
-        isbn = self.get_string_input("Enter ISBN of book to remove: ")
-        self.library.remove_book(isbn)
-        print("Book removed successfully.")
-
-    def find_book(self):
-        isbn = self.get_string_input("Enter ISBN of book to find: ")
-        book = self.library.find_book(isbn)
-        if book:
-            print("Book found:", book)
-        else:
-            print("Book not found.")
-
-    def check_out_book(self):
-        isbn = self.get_string_input("Enter ISBN of book to check out: ")
-        self.library.check_out_book(isbn)
-
-    def return_book(self):
-        isbn = self.get_string_input("Enter ISBN of book to return: ")
-        self.library.return_book(isbn)
-
-    def display_overdue_books(self):
-        self.library.display_overdue_books()
+                print("Enter a number!")
 
 
 if __name__ == "__main__":
-    system = LibraryManagementSystem()
-    system.main()
+    sys.exit(LibraryManagementSystem().run())

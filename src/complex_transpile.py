@@ -19,6 +19,8 @@ from nodes import (
     search_node,
 )
 
+from inference_connector import init_model
+
 
 class State(TypedDict):
     code: str
@@ -84,15 +86,15 @@ if __name__ == "__main__":
         "dummy/python", os.path.basename(java_file_path).replace(".java", ".py")
     )
 
-    model = ChatOpenAI(model=model_name, temperature=0.2, api_key=OPENAI_API_KEY)
+    model: ChatOpenAI = init_model()
 
     # Read in the original java code file
     with open(java_file_path, "r") as fl:
-        java_code = fl.read()
+        java_code: str = fl.read()
 
     # Read the prompts
     with open("prompts.json", "r") as fl:
-        prompts = json.load(fl)
+        prompts: dict = json.load(fl)
 
     # Define an initial state
     state = State(
