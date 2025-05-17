@@ -1,6 +1,6 @@
 import re
 import textwrap
-from typing import Any, cast
+from typing import cast
 
 from langchain_core.messages import AIMessage
 

@@ -1,3 +1,3 @@
-from .state import State, StateError
+from core.state import State, StateError
 
-__all__ = [State, StateError]
+__all__ = ["State", "StateError"]

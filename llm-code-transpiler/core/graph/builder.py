@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from ..state import State
-from ..nodes import Node
+from core.state import State
+from core.nodes import Node
 
 from typing import Callable
 

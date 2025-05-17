@@ -1,7 +1,4 @@
-from types import CodeType
-from typing import Any, Dict, Optional
-
-from ..state import StateError
+from core.state import StateError
 
 
 def python_compile(code: str, filename: str = "<string>") -> StateError:
@@ -10,7 +7,7 @@ def python_compile(code: str, filename: str = "<string>") -> StateError:
     """
     try:
         # Compile will parse + compile all at once
-        code_obj: CodeType = compile(code, filename, "exec")
+        _ = compile(code, filename, "exec")
         return StateError(status=0, message="")
 
     except SyntaxError as e:

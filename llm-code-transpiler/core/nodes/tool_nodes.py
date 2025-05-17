@@ -1,8 +1,8 @@
 from loguru import logger
 
-from .base import Node
-from ..state import State, StateError
-from ..utils import generate_questions
+from core.nodes.base import Node
+from core.nodes.utils import generate_questions
+from core.state import State
 
 from langchain_community.utilities import GoogleSerperAPIWrapper
 

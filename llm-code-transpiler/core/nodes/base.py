@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Any, TypeVar, ParamSpec, Generic
-from pydantic import BaseModel, Field
+from typing import TypeVar, ParamSpec, Generic
+from pydantic import Field
 from langchain_openai import ChatOpenAI
 
 P = ParamSpec("P")
