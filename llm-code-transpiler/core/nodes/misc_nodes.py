@@ -14,7 +14,7 @@ class PythonFormatNode(Node):
         logger.debug("Formatting Python code")
 
         mode = black.FileMode(string_normalization=False)
-        self.state.code = black.format_str(state.code, fast=False, mode=mode)
+        self.state.code = black.format_str(state.code, mode=mode)
 
         return self.state
 

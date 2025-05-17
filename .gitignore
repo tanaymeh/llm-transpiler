@@ -3,3 +3,5 @@
 .ipynb_checkpoints/*
 .env
 .zed/*
+.venv/*
+uv.lock

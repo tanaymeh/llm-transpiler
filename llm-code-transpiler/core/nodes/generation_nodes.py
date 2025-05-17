@@ -1,9 +1,9 @@
 from loguru import logger
 from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
 
-from .base import Node
-from ..state import State
-from ..utils import sanitize_output
+from core.nodes.base import Node
+from core.state import State
+from core.utils import sanitize_output
 
 
 class TranspileNode(Node):
@@ -11,7 +11,7 @@ class TranspileNode(Node):
 
     scratchpad: str
     transpile_prompt: str
-    error_prompts: dict[int | str]
+    error_prompts: dict[int | str, str]
 
     def consolidate_chat_history(self) -> list[BaseMessage]:
         """
@@ -25,7 +25,7 @@ class TranspileNode(Node):
         ]
         # If there was error in previous transpilation
         if self.state.last_error.status != 0:
-            error_messages = [AIMessage(content=self.state.code)]
+            error_messages: list[BaseMessage] = [AIMessage(content=self.state.code)]
 
             # Get the error prompt based on the error status code
             error_message = HumanMessage(
@@ -48,11 +48,10 @@ class TranspileNode(Node):
 
         # Get the model generation
         messages: list[BaseMessage] = self.consolidate_chat_history()
-        output: AIMessage = self.model.invoke(messages)
-        output = sanitize_output(output)
-
+        output: AIMessage = self.model.invoke(messages)  # type: ignore
+        output_str = sanitize_output(output)
         # Update the state
-        self.state.code = output
+        self.state.code = output_str
         self.state.current_iterations += 1
         return self.state
 
@@ -68,14 +67,15 @@ class SummaryNode(Node):
         logger.debug("Generating a summary of the original code")
 
         # Form the history
-        messages: list = [
-            SystemMessage(content=self.system_prompt),
+        messages: list[BaseMessage] = [
+            SystemMessage(content=self.system_prompt.format(self.state.scratchpad)),
             HumanMessage(content=self.summary_prompt.format(self.state.original_code)),
         ]
 
         # Get the summary from the model
-        output: AIMessage = self.model.invoke(messages)
-        self.state.scratchpad = output.content
+        output: AIMessage = self.model.invoke(messages)  # type: ignore
+        output_str = sanitize_output(output)
+        self.state.scratchpad = output_str
 
         return self.state
 
@@ -90,13 +90,14 @@ class PlanningNode(Node):
         logger.debug("Generating a step by step plan on how to transpile")
 
         # Form the history
-        messages: list = [
+        messages: list[BaseMessage] = [
             SystemMessage(content=self.system_prompt.format(self.state.scratchpad)),
             HumanMessage(content=self.planning_prompt.format(self.state.original_code)),
         ]
 
         # Get the plan from the model
-        output: AIMessage = self.model.invoke(messages)
-        self.state.scratchpad = output.content
+        output: AIMessage = self.model.invoke(messages)  # type: ignore
+        output_str = sanitize_output(output)
+        self.state.scratchpad = output_str
 
         return self.state

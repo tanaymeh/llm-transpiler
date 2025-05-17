@@ -1,8 +1,8 @@
 from loguru import logger
 
-from .base import Node
-from ..state import State
-from ..utils import python_compile
+from nodes.base import Node
+from core.state import State
+from core.utils import python_compile
 
 
 class PythonCompileNode(Node):

@@ -1,6 +1,7 @@
 import re
 import textwrap
-from typing import Any
+from typing import Any, cast
+
 from langchain_core.messages import AIMessage
 
 
@@ -13,7 +14,8 @@ def sanitize_output(message: AIMessage) -> str:
      - Joining multiple blocks with a blank line
     If no fences are found, dedents and cleans the entire content.
     """
-    content: str = message.content
+    content = message.content
+    content = cast(str, content)  # to keep the type checker quiet
 
     def strip_prompts(code: str) -> str:
         lines = []

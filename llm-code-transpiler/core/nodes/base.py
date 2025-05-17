@@ -1,14 +1,19 @@
-from typing import Any
+from abc import ABC, abstractmethod
+from typing import Any, TypeVar, ParamSpec, Generic
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 
+P = ParamSpec("P")
+R = TypeVar("R")
 
-class Node(BaseModel):
+
+class Node(Generic[P, R], ABC):
+    name: str
     model: ChatOpenAI
     system_prompt: str = Field(
-        default_factory="You are a helpful AI Agent that follows are instructions you are given"
+        default_factory=lambda: "You are a helpful AI Agent that follows the instructions you are given"
     )
     _is_debug: bool
 
-    def func(self, **kwargs) -> Any:
-        pass
+    @abstractmethod
+    def func(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
