@@ -12,7 +12,7 @@ class TranspileAgent(Agent):
     """
 
     name: str = "transpile"
-    transpile_prompt: str
+    transpile_user_prompt: str
     error_prompts: dict[int | str, str]
 
     def plan(self, state: State) -> list[BaseMessage]:
@@ -20,8 +20,12 @@ class TranspileAgent(Agent):
         Planning in TranspileAgent is just forming the messages based on the previous error status
         """
         messages: list[BaseMessage] = [
-            SystemMessage(content=self.system_prompt.format(state.scratchpad)),
-            HumanMessage(content=self.transpile_prompt.format(state.original_code)),
+            SystemMessage(content=self.system_prompt),
+            HumanMessage(
+                content=self.transpile_user_prompt.format(
+                    plan=state.scratchpad, original_code=state.original_code
+                )
+            ),
         ]
 
         # If there was an error, include previous code and error prompt
@@ -70,15 +74,17 @@ class SummaryAgent(Agent):
     """
 
     name: str = "summary"
-    summary_prompt: str
+    summary_user_prompt: str
 
     def plan(self, state: State) -> list[BaseMessage]:
         """
         Planning here is just forming the messages
         """
         messages: list[BaseMessage] = [
-            SystemMessage(content=self.system_prompt.format(state.scratchpad)),
-            HumanMessage(content=self.summary_prompt.format(state.original_code)),
+            SystemMessage(content=self.system_prompt),
+            HumanMessage(
+                content=self.summary_user_prompt.format(source_code=state.original_code)
+            ),
         ]
 
         return messages
@@ -91,6 +97,7 @@ class SummaryAgent(Agent):
         output: AIMessage = self.model.invoke(messages)  # type: ignore
         output_str = sanitize_output(output)
 
+        # Store the summary in the state scratchpad
         state.scratchpad = output_str
         return state
 
@@ -107,15 +114,19 @@ class PlanningAgent(Agent):
     """
 
     name: str = "planning"
-    planning_prompt: str
+    planning_user_prompt: str
 
     def plan(self, state: State) -> list[BaseMessage]:
         """
         Execute the planning LLM call to generate a detailed plan.
         """
         messages: list[BaseMessage] = [
-            SystemMessage(content=self.system_prompt.format(state.scratchpad)),
-            HumanMessage(content=self.planning_prompt.format(state.original_code)),
+            SystemMessage(content=self.system_prompt),
+            HumanMessage(
+                content=self.planning_user_prompt.format(
+                    summary=state.scratchpad, original_code=state.original_code
+                )
+            ),
         ]
         return messages
 

@@ -19,6 +19,7 @@ from core import (
     python_format,
     save_to_disk,
 )
+from prompts import Prompts
 
 from dotenv import load_dotenv
 
@@ -34,7 +35,6 @@ def main():
     _ = load_dotenv()
     parser = argparse.ArgumentParser(description="Run complex transpile workflow")
     parser.add_argument("--model-name", required=True, help="LLM model name")
-    parser.add_argument("--prompts", required=True, help="Path to prompts JSON file")
     parser.add_argument("--source", required=True, help="Path to source code file")
     parser.add_argument("--target", required=True, help="Path to target output file")
     parser.add_argument(
@@ -73,13 +73,13 @@ def main():
     # Instantiate agents with prompts
     summary_agent = SummaryAgent(
         model=model,
-        system_prompt=prompts["summary_system"],
-        summary_prompt=prompts["summary"],
+        system_prompt=Prompts.SUMMARY_AGENT_SYSTEM_PROMPT,
+        summary_user_prompt=Prompts.SUMMARY_AGENT_USER_PROMPT,
     )
     planning_agent = PlanningAgent(
         model=model,
-        system_prompt=prompts["planning_system"],
-        planning_prompt=prompts["planning"],
+        system_prompt=Prompts.PLANNING_AGENT_SYSTEM_PROMPT,
+        planning_user_prompt=Prompts.PLANNING_AGENT_USER_PROMPT,
     )
     # search_agent = SearchAgent(
     #     model=model,
@@ -87,11 +87,11 @@ def main():
     # )
     transpile_agent = TranspileAgent(
         model=model,
-        system_prompt=prompts["transpile"],
-        transpile_prompt=prompts["transpile"],
+        system_prompt=Prompts.TRANSPILE_AGENT_SYSTEM_PROMPT,
+        transpile_user_prompt=Prompts.TRANSPILE_AGENT_USER_PROMPT,
         error_prompts={
-            1: prompts["transpile_compile_err"],
-            2: prompts["transpile_output_err"],
+            1: Prompts.TRANSPILE_AGENT_COMPILE_ERROR_PROMPT,
+            2: Prompts.TRANSPILE_AGENT_OUTPUT_MATCH_ERROR_PROMPT,
         },
     )
 
