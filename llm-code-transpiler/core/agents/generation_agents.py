@@ -28,15 +28,18 @@ class TranspileAgent(Agent):
             ),
         ]
 
-        # If there was an error, include previous code and error prompt
+        # If there was an error, include previous code and the error message
         if state.last_error.status != 0:
-            error_messages: list[BaseMessage] = [AIMessage(content=state.code)]
-            error_message = HumanMessage(
-                content=self.error_prompts[state.last_error.status].format(
-                    state.last_error.message
-                )
-            )
-            error_messages.append(error_message)
+            error_messages = [
+                AIMessage(
+                    content=state.code
+                ),  # Since the faulty code was agent generated
+                HumanMessage(
+                    content=self.error_prompts[state.last_error.status].format(
+                        code=state.code, trace=state.last_error.message
+                    )
+                ),
+            ]
             messages.extend(error_messages)
 
         return messages

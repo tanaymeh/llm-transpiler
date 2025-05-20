@@ -45,15 +45,11 @@ Begin when the user provides the plan and the Java code.
         """Following the step by step plan:\n{plan}\n\n=========\nFollowing is the Java code to be transpiled:\n{original_code}"""
     )
 
-    TRANSPILE_AGENT_COMPILE_ERROR_PROMPT: str = """You are a senior polyglot engineer performing **post-transpilation repair**.  
-The Python 3.x code produced from Java failed to compile.
+    TRANSPILE_AGENT_COMPILE_ERROR_PROMPT: str = """The Python 3.x code you produced from Java failed to compile.
 
 ─────────────────
-INPUTS  
-• **Broken code:**  
-{code}
-
-• **Stack trace:**  
+INPUTS
+• **Stack trace:**
 {trace}
 
 ─────────────────
@@ -82,17 +78,13 @@ INTERNAL WORKFLOW (do not output)
 4. Double-check that semantics match the original Java implementation.  
 5. Emit the corrected code per the **Mandatory Output Rules**.
 
-Begin when the broken code and trace are supplied.
+Fix the code below:
 """
 
-    TRANSPILE_AGENT_OUTPUT_MATCH_ERROR_PROMPT: str = """You are a senior polyglot engineer performing **functional-parity repair**.  
-The Python 3.x code translated from Java compiles, but its behaviour diverges from the original.
+    TRANSPILE_AGENT_OUTPUT_MATCH_ERROR_PROMPT: str = """The Python 3.x code translated from Java compiles, but its behaviour diverges from the original.
 
 ─────────────────
 INPUTS  
-• **Current Python code:**  
-{code}
-
 • **Failing test details (input → expected │ actual):**  
 {tests}
 
@@ -122,7 +114,7 @@ INTERNAL WORKFLOW (do not output)
 4. Verify syntax with a mental `python -m py_compile`.  
 5. Emit the fixed code per the **Mandatory Output Rules**.
 
-Begin when the broken code and test details are provided.
+Fix the broken code:
 """
 
     SUMMARY_AGENT_SYSTEM_PROMPT: str = """You are a senior software architect acting as a **code explainer**.  
