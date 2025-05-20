@@ -12,7 +12,7 @@ class Tracer:
     def __init__(self, agent_name: str):
         self.agent_name = agent_name
         self.trace_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.trace_dir = Path("traces")
+        self.trace_dir = Path(".traces")
         self.trace_file = self.trace_dir / f"{self.trace_id}_{self.agent_name}.txt"
         self.trace_dir.mkdir(parents=True, exist_ok=True)
 

@@ -5,3 +5,5 @@
 .zed/*
 .venv/*
 uv.lock
+*/traces/*
+dummy/*
