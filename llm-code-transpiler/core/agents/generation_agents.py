@@ -1,5 +1,6 @@
 from loguru import logger
 from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
+from core.agents.tracing import with_tracing
 
 from core.state import State
 from core.agents.base import Agent
@@ -64,11 +65,11 @@ class TranspileAgent(Agent):
 
         return state
 
+    @with_tracing
     def run(self, state: State) -> State:
         """Binds the planning and execution part together"""
         messages = self.plan(state)
-        self.state = self.execute(state, messages)
-        return self.state
+        return self.execute(state, messages)
 
 
 class SummaryAgent(Agent):
@@ -107,8 +108,7 @@ class SummaryAgent(Agent):
     def run(self, state: State) -> State:
         """Binds the planning and execution part together"""
         messages = self.plan(state)
-        self.state = self.execute(state, messages)
-        return self.state
+        return self.execute(state, messages)
 
 
 class PlanningAgent(Agent):
@@ -148,5 +148,4 @@ class PlanningAgent(Agent):
     def run(self, state: State) -> State:
         """Binds the planning and execution part together"""
         messages = self.plan(state)
-        self.state = self.execute(state, messages)
-        return self.state
+        return self.execute(state, messages)

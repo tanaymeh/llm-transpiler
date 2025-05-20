@@ -5,6 +5,7 @@ CLI script to run the complex transpile workflow using the new Agent-based archi
 import os
 import argparse
 import json
+from loguru import logger
 
 from langgraph.graph import END
 from langchain_openai import ChatOpenAI
@@ -45,9 +46,9 @@ def main():
     )
     args = parser.parse_args()
 
-    # Load prompt templates
-    with open(args.prompts, "r") as pf:
-        prompts = json.load(pf)
+    logger.info(f"Running Complex Transpile on {args.model_name} model")
+
+    prompts = Prompts()
 
     # Initialize LLM client
     model = ChatOpenAI(
@@ -73,13 +74,13 @@ def main():
     # Instantiate agents with prompts
     summary_agent = SummaryAgent(
         model=model,
-        system_prompt=Prompts.SUMMARY_AGENT_SYSTEM_PROMPT,
-        summary_user_prompt=Prompts.SUMMARY_AGENT_USER_PROMPT,
+        system_prompt=prompts.SUMMARY_AGENT_SYSTEM_PROMPT,
+        summary_user_prompt=prompts.SUMMARY_AGENT_USER_PROMPT,
     )
     planning_agent = PlanningAgent(
         model=model,
-        system_prompt=Prompts.PLANNING_AGENT_SYSTEM_PROMPT,
-        planning_user_prompt=Prompts.PLANNING_AGENT_USER_PROMPT,
+        system_prompt=prompts.PLANNING_AGENT_SYSTEM_PROMPT,
+        planning_user_prompt=prompts.PLANNING_AGENT_USER_PROMPT,
     )
     # search_agent = SearchAgent(
     #     model=model,
@@ -87,11 +88,11 @@ def main():
     # )
     transpile_agent = TranspileAgent(
         model=model,
-        system_prompt=Prompts.TRANSPILE_AGENT_SYSTEM_PROMPT,
-        transpile_user_prompt=Prompts.TRANSPILE_AGENT_USER_PROMPT,
+        system_prompt=prompts.TRANSPILE_AGENT_SYSTEM_PROMPT,
+        transpile_user_prompt=prompts.TRANSPILE_AGENT_USER_PROMPT,
         error_prompts={
-            1: Prompts.TRANSPILE_AGENT_COMPILE_ERROR_PROMPT,
-            2: Prompts.TRANSPILE_AGENT_OUTPUT_MATCH_ERROR_PROMPT,
+            1: prompts.TRANSPILE_AGENT_COMPILE_ERROR_PROMPT,
+            2: prompts.TRANSPILE_AGENT_OUTPUT_MATCH_ERROR_PROMPT,
         },
     )
 
