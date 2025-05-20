@@ -1,5 +1,9 @@
-*/__pycache__/*
+*__pycache__/
 .DS_Store
 .ipynb_checkpoints/*
 .env
 .zed/*
+.venv/*
+uv.lock
+*/traces/*
+dummy/*
