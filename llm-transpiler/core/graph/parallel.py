@@ -298,7 +298,7 @@ class SingleFileProcessor:
             api_key = os.getenv("OPEN_API_KEY")
             if not api_key:
                 raise ValueError(
-                    "OPEN_API_KEY or OPENAI_API_KEY environment variable required. "
+                    "OPEN_API_KEY environment variable required. "
                     "Please set one of these in your .env file or environment."
                 )
 

@@ -188,10 +188,10 @@ def main():
             import os
 
             # Get API key with fallback
-            api_key = os.getenv("OPEN_API_KEY") or os.getenv("OPENAI_API_KEY")
+            api_key = os.getenv("OPEN_API_KEY")
             if not api_key:
                 raise ValueError(
-                    "OPEN_API_KEY or OPENAI_API_KEY environment variable required. "
+                    "OPEN_API_KEY environment variable required. "
                     "Please set one of these in your .env file or environment."
                 )
 
@@ -233,10 +233,10 @@ def main():
             import os
 
             # Get API key with fallback
-            api_key = os.getenv("OPEN_API_KEY") or os.getenv("OPENAI_API_KEY")
+            api_key = os.getenv("OPEN_API_KEY")
             if not api_key:
                 raise ValueError(
-                    "OPEN_API_KEY or OPENAI_API_KEY environment variable required. "
+                    "OPEN_API_KEY environment variable required. "
                     "Please set one of these in your .env file or environment."
                 )
 
@@ -267,7 +267,19 @@ def main():
         project_state.current_phase = "optimize"
         start_time = time.time()
 
-        optimizer = ProjectOptimizer(project_state, args.model_name)
+        # Get API key for optimization
+        import os  # Ensure os module is available
+
+        api_key = os.getenv("OPEN_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "OPEN_API_KEY environment variable required for optimization"
+            )
+
+        base_url = os.getenv("OPEN_BASE_URL", "https://api.openai.com/v1")
+        optimizer = ProjectOptimizer(
+            project_state, args.model_name, api_key=api_key, base_url=base_url
+        )
         optimization_results = optimizer.optimize()
 
         # Save optimization report

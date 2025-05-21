@@ -73,7 +73,7 @@ class DirectoryOptimizationAgent(Agent):
 
     def execute(
         self, directory: Path, files: List[Path], messages: list[BaseMessage]
-    ) -> Dict[Path, str]:
+    ) -> Dict[str, str]:
         """
         Execute the optimization for a directory.
 
@@ -107,7 +107,7 @@ class DirectoryOptimizationAgent(Agent):
                     with open(file_path, "w") as f:
                         f.write(new_content)
 
-                    results[file_path] = new_content
+                    results[str(file_path)] = new_content
                     logger.info(f"Optimized {rel_path}")
                 else:
                     logger.warning(f"File not found: {rel_path}")
@@ -118,7 +118,7 @@ class DirectoryOptimizationAgent(Agent):
             logger.error(f"Error applying optimizations to {directory}: {str(e)}")
             return {}
 
-    def optimize_directory(self, directory: Path, files: List[Path]) -> Dict[Path, str]:
+    def optimize_directory(self, directory: Path, files: List[Path]) -> Dict[str, str]:
         """
         Run the optimization for a directory.
 
@@ -302,24 +302,26 @@ class ProjectOptimizer:
     Orchestrates the optimization of a project.
     """
 
-    def __init__(self, project_state: ProjectState, model_name: str):
+    def __init__(
+        self, project_state: ProjectState, model_name: str, api_key: str, base_url: str
+    ):
         """
         Initialize the project optimizer.
 
         Args:
             project_state: Project state
             model_name: Model name
+            api_key: OpenAI API key
+            base_url: OpenAI API base URL
         """
-        from langchain_core.utils import get_from_env
-
         self.project_state = project_state
 
         # Initialize LLM client
         model = ChatOpenAI(
             model=model_name,
             temperature=0.2,
-            api_key=SecretStr(get_from_env("OPEN_API_KEY", "")),
-            base_url=get_from_env("OPEN_BASE_URL", ""),
+            api_key=SecretStr(api_key),
+            base_url=base_url,
         )
 
         # Load optimization prompts
