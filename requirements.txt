@@ -4,3 +4,4 @@ langgraph
 python-dotenv
 langchain_community
 loguru
+tqdm

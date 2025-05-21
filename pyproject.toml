@@ -14,5 +14,5 @@ dependencies = [
     "mypy>=1.15.0",
     "openai>=1.78.1",
     "python-dotenv>=1.1.0",
-    
+    "tqdm>=4.67.1",
 ]

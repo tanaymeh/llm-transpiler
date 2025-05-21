@@ -49,9 +49,7 @@ class TranspileAgent(Agent):
         """
         Execute the transpilation LLM call based on the last error status.
         """
-        logger.debug(
-            f"Last error status: {state.last_error.status} | current iter: {state.current_iterations}"
-        )
+        # Removed verbose debug logging
 
         # Get the outputs from the model
         output: AIMessage = self.model.invoke(messages)  # type: ignore
@@ -97,7 +95,7 @@ class SummaryAgent(Agent):
         """
         Execute the summary LLM call.
         """
-        logger.debug("Running the SummaryAgent")
+        # Removed verbose debug logging
         output: AIMessage = self.model.invoke(messages)  # type: ignore
         output_str = sanitize_output(output)
 
@@ -137,7 +135,7 @@ class PlanningAgent(Agent):
         """
         Apply the generated plan to the state scratchpad.
         """
-        logger.debug("Running the PlanningAgent")
+        # Removed verbose debug logging
 
         output: AIMessage = self.model.invoke(messages)  # type: ignore
         output_str = sanitize_output(output)
