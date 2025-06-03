@@ -4,6 +4,7 @@ An attempt at building an LLM powered code-transpiler that follows a flow simila
 ## Table of Contents
 1. [Simple Transpile](#simple-transpile) - A minimal working version of transpiler that does transpiles the original code, tries compiling it and runs back-and-forth between the transpiler and compiler nodes until the code is error free.
 2. [Complex Transpile](#complex-transpile) - A more advanced version that adds more nodes and more sophisticated logic to transpile code with higher precision.
+3. [Project-Level Transpile](#project-level-transpile) - A comprehensive solution for transpiling entire projects with multiple files, including dependency analysis, parallel processing, and optimization.
 
 ## Simple Transpile
 ![Simple Transpile](https://i.imgur.com/FEqC0Ha.png)
@@ -21,3 +22,76 @@ The original code first flows into the summary node which uses an LLM to generat
 This plan then, along with the original code is sent to the transpile node which generates the transpiled code. The transpiled code is sent to the compilation node which tries compiling the code. If it fails, the error message along with the original code is sent back to the transpile node and this process continues until either the code compiles error-free or if we hit a set maximum number of iterations (to stop getting into an infinite loop).
 
 The final node is a format node which uses Black formatter in Python to format the code at the end of successful compilation to meet the PEP8 standards.
+
+## Project-Level Transpile
+
+```mermaid
+graph TD
+    A[Project Transpilation Coordinator] --> B[Project Structure Cloner]
+    A --> C[Dependency Analyzer]
+    C --> D[Parallel Execution Manager]
+    D --> E[SingleFileTranspileAgent Pool]
+    E --> F[Test Cloner/Generator]
+    F --> G[Project Optimization Agent]
+    G --> H[Final Verification]
+    
+    subgraph "First Pass"
+    E
+    end
+    
+    subgraph "Second Pass"
+    G
+    end
+    
+    subgraph "SingleFileTranspileAgent"
+    I[Summary Agent] --> J[Planning Agent]
+    J --> K[Transpile Agent]
+    K --> L[Compile & Verify]
+    L -->|Error| K
+    L -->|Success| M[Format]
+    end
+```
+
+The project-level transpilation extends the complex transpile workflow to handle entire projects with multiple files. This approach enables transpiling large Java projects to Python while maintaining the project structure and ensuring compatibility between files.
+
+### Features
+
+- **Project Structure Cloning**: Automatically mirrors the source project structure in the target directory.
+- **Dependency Analysis**: Analyzes dependencies between files to determine the optimal transpilation order.
+- **Parallel Processing**: Transpiles multiple files concurrently for faster processing.
+- **Test Handling**: Clones and adapts test files or generates new tests for the transpiled code.
+- **Two-Pass Optimization**: 
+  1. First pass: Transpiles individual files while maintaining compatibility
+  2. Second pass: Optimizes the entire project for more idiomatic Python code
+
+### Usage
+
+```bash
+./run_project_transpile.py --model-name gpt-4-turbo --source-dir /path/to/java/project --target-dir /path/to/output/python/project
+```
+
+#### Command-line Arguments
+
+- `--model-name`: LLM model name (required)
+- `--source-dir`: Path to source Java project directory (required)
+- `--target-dir`: Path to target Python project directory (required)
+- `--concurrency`: Number of parallel transpilation agents (default: 3)
+- `--max-retries`: Maximum transpilation retries on error (default: 2)
+- `--skip-optimization`: Skip the optimization phase (optional)
+- `--skip-tests`: Skip test cloning/generation (optional)
+- `--report-file`: Path to save the transpilation report (default: transpilation_report.json)
+
+### Workflow
+
+1. **Project Structure Cloning**: The source project structure is cloned to the target directory, creating empty Python files.
+2. **Dependency Analysis**: Dependencies between Java files are analyzed to determine the optimal transpilation order.
+3. **Parallel Transpilation**: Files are transpiled in parallel, respecting dependencies.
+4. **Test Handling**: Test files are either cloned from the source project or generated for the transpiled code.
+5. **Project Optimization**: The transpiled project is optimized for more idiomatic Python code.
+
+### Output
+
+- Transpiled Python files in the target directory
+- Transpilation report with statistics and status of each file
+- Manual review report for files that failed transpilation
+- Optimization report with details of the optimizations applied
