@@ -42,9 +42,7 @@ class DirectoryOptimizationAgent(Agent):
         for file_path in files:
             try:
                 with open(file_path, "r") as f:
-                    file_contents[str(file_path.relative_to(directory.parent))] = (
-                        f.read()
-                    )
+                    file_contents[str(file_path.relative_to(directory))] = f.read()
             except Exception as e:
                 logger.error(f"Error reading {file_path}: {str(e)}")
                 continue
@@ -52,7 +50,7 @@ class DirectoryOptimizationAgent(Agent):
         # Create context for optimization
         context = {
             "directory": str(directory),
-            "files": [str(f.relative_to(directory.parent)) for f in files],
+            "files": [str(f.relative_to(directory)) for f in files],
             "file_contents": file_contents,
             "optimization_patterns": [
                 "Convert Java-style getters/setters to Python properties",
@@ -72,7 +70,11 @@ class DirectoryOptimizationAgent(Agent):
         return messages
 
     def execute(
-        self, directory: Path, files: List[Path], messages: list[BaseMessage]
+        self,
+        directory: Path,
+        files: List[Path],
+        messages: list[BaseMessage],
+        project_root: Path,
     ) -> Dict[str, str]:
         """
         Execute the optimization for a directory.
@@ -100,7 +102,11 @@ class DirectoryOptimizationAgent(Agent):
             results = {}
             for rel_path, new_content in optimizations.items():
                 # Convert relative path to absolute path
-                file_path = directory.parent / rel_path
+                file_path = (directory / rel_path).resolve()
+
+                if not file_path.is_relative_to(project_root.resolve()):
+                    logger.warning(f"Skipping path outside project: {rel_path}")
+                    continue
 
                 if file_path.exists():
                     # Save the optimized content
@@ -118,7 +124,9 @@ class DirectoryOptimizationAgent(Agent):
             logger.error(f"Error applying optimizations to {directory}: {str(e)}")
             return {}
 
-    def optimize_directory(self, directory: Path, files: List[Path]) -> Dict[str, str]:
+    def optimize_directory(
+        self, directory: Path, files: List[Path], project_root: Path
+    ) -> Dict[str, str]:
         """
         Run the optimization for a directory.
 
@@ -130,7 +138,7 @@ class DirectoryOptimizationAgent(Agent):
             Dictionary mapping file paths to optimized content
         """
         messages = self.plan(directory, files)
-        return self.execute(directory, files, messages)
+        return self.execute(directory, files, messages, project_root)
 
     @with_tracing
     def run(self, state: State) -> State:
@@ -333,6 +341,7 @@ You will receive a JSON object containing:
 2. A list of Python files in that directory
 3. The content of each file
 4. A list of optimization patterns to apply
+All paths are relative to the directory being optimized.
 
 For each file, apply these optimizations:
 - Convert Java-style getters/setters to Python properties
@@ -348,7 +357,7 @@ IMPORTANT RULES:
 4. Focus on readability and Pythonic style
 
 Return a JSON object where:
-- Keys are the relative file paths
+- Keys are the relative file paths (relative to the directory being optimized)
 - Values are the optimized file contents
 """
 
@@ -428,7 +437,9 @@ Return a JSON object with:
         for directory in sorted_dirs:
             if directory in py_files_by_dir and py_files_by_dir[directory]:
                 result = self.directory_agent.optimize_directory(
-                    directory, py_files_by_dir[directory]
+                    directory,
+                    py_files_by_dir[directory],
+                    self.project_state.target_dir,
                 )
                 directory_results[str(directory)] = result
 
